@@ -24,7 +24,15 @@ def resample_raster(data, reference_shape):
 def calculate_difference(image1, image2):
     return np.abs(image1 - image2)
 
-def create_change_map(diff_image, threshold):
+def enhance_contrast(diff_image, threshold_factor=0.75):
+    diff_image = (diff_image - np.min(diff_image)) / (np.max(diff_image) - np.min(diff_image)) * 255
+    diff_image = diff_image.astype(np.uint8)
+
+    diff_image = np.log1p(diff_image)
+    diff_image = (diff_image / np.max(diff_image)) * 255
+    diff_image = diff_image.astype(np.uint8)
+
+    threshold = threshold_factor * np.max(diff_image)  # Set a dynamic threshold
     return np.where(diff_image > threshold, 255, 0).astype(np.uint8)
 
 def save_raster(output_path, data, profile):
@@ -36,8 +44,6 @@ def main():
     image1_path = get_valid_file_path("Enter path to the first .tif image: ")
     image2_path = get_valid_file_path("Enter path to the second .tif image: ")
     output_path = get_valid_file_path("Enter path for the output .tif file: ")
-
-    threshold = 50  # need to test this, may change this to a user input
 
     image1, profile1 = read_raster(image1_path)
     image2, profile2 = read_raster(image2_path)
@@ -53,19 +59,22 @@ def main():
     print(f"Change map saved to {output_path}")
     
     plt.figure(figsize=(10, 5))
-    
+
     plt.subplot(1, 3, 1)
     plt.title("Image 1")
-    show(image1)
-    
+    plt.imshow(image1)
+    plt.axis("off")
+
     plt.subplot(1, 3, 2)
     plt.title("Image 2")
-    show(image2)
-    
+    plt.imshow(image2)
+    plt.axis("off")
+
     plt.subplot(1, 3, 3)
     plt.title("Change Map")
-    show(change_map)
-    
+    plt.imshow(change_map)
+    plt.axis("off")
+
     plt.tight_layout()
     plt.show()
 
