@@ -1,11 +1,12 @@
 # 🌍 Change Detection in Raster Images 
 (work in progress)
-
-## 📝 Overview
-This project is a simple implementation of change detection for raster imagery using Python. It utilizes **rasterio** to read and write GeoTIFF files, enabling efficient geospatial data processing. The solution computes pixel-wise differences between two input images and generates a binary change map 🗺️. 
 <div align="center">
   <img src="./readme/sample.png"></img>
 </div>
+
+## 📝 Overview
+This project is a simple implementation of change detection for raster imagery using Python. It utilizes **rasterio** to read and write GeoTIFF files, enabling efficient geospatial data processing. The solution computes pixel-wise differences between two input images and generates a binary change map 🗺️. 
+
 ## 🎯 Purpose
 Mapsheet refreshes are usually excessively tedious, change detection helps to narrow down the scope that cartographers need to review instead of manually performing analysis. This solution also has general uses in IMINT analysis/ HADR Damage Assessment.
 
