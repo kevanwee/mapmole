@@ -2,7 +2,6 @@ import rasterio
 import numpy as np
 import matplotlib.pyplot as plt
 from rasterio.plot import show
-from rasterio.enums import Resampling
 
 def get_valid_file_path(prompt):
     while True:
