@@ -8,7 +8,10 @@
 This project is a simple implementation of change detection for raster imagery using Python. It utilizes **rasterio** to read and write GeoTIFF files, enabling efficient geospatial data processing. The solution computes pixel-wise differences between two input images and generates a binary change map 🗺️. 
 
 ## 🎯 Purpose
-Mapsheet refreshes are usually excessively tedious, change detection helps to narrow down the scope that cartographers need to review instead of manually performing analysis. This solution also has general uses in IMINT analysis/ HADR Damage Assessment.
+Change detection is a critical technique used across various domains to identify and analyze differences in spatial, structural, or environmental data over time with uses in:
+- Humanitarian Assistance and Disaster Relief (HADR): assessing damage after natural disasters by comparing pre- and post-event satellite imagery;
+- Imagery Intelligence (IMINT) analysis: monitor activity patterns, and infrastructure developments; and
+- Cartography: detect landscape changes such as new urban developments, deforestation, or shifting coastlines to assist in mapsheet refreshes.
 
 <div align="center">
   <img src="./readme/theory.png"></img>
@@ -21,6 +24,7 @@ Mapsheet refreshes are usually excessively tedious, change detection helps to na
 
 ### **1️⃣ Read and Process Raster Images**
 The code extracts only **the first band** (assumes single-band grayscale images). 
+(Note: it is recommended to use images that have the same projection system)
 
 ### **2️⃣ Image Alignment**
 - If the two images have different dimensions, it **resizes the second image** to match the first one.  
@@ -60,7 +64,7 @@ It will also display visualizations of the input images and the resulting change
 (In the event that too many or too few changes are being detected in the output map, adjust the threshold parameter in the script.)
 
 💡 Pro Tip: Try this solution for deforestation monitoring 🌳, urban expansion tracking 🏙️, or disaster impact assessment 🌊
-💡 Pro Tip 2: Color correcting the imagery would generally be helpful. Note that results may vary based on the cloud cover and errors in georectification
+💡 Pro Tip 2: Color correcting the imagery would generally be helpful. Note that results may vary based on the cloud cover and errors in georectification.
 
 
 
