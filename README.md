@@ -64,6 +64,7 @@ It will also display visualizations of the input images and the resulting change
 (In the event that too many or too few changes are being detected in the output map, adjust the threshold parameter in the script.)
 
 💡 Pro Tip: Try this solution for deforestation monitoring 🌳, urban expansion tracking 🏙️, or disaster impact assessment 🌊
+
 💡 Pro Tip 2: Color correcting the imagery would generally be helpful. Note that results may vary based on the cloud cover and errors in georectification.
 
 
