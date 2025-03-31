@@ -53,7 +53,7 @@ def main():
         image2 = resample_raster(image2, image1.shape)
     
     diff_image = calculate_difference(image1, image2)
-    change_map = create_change_map(diff_image, threshold)
+    change_map = enhance_contrast(diff_image)
     save_raster(output_path, change_map, profile1)
 
     print(f"Change map saved to {output_path}")
