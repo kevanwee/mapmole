@@ -2,7 +2,11 @@
 (work in progress)
 
 ## 📝 Overview
-This project is a simple attempt at change detection for raster imagery using Python. It utilizes **rasterio** to read and write GeoTIFF files, enabling efficient geospatial data processing. The solution computes pixel-wise differences between two input images and generates a binary change map 🗺️. 
+This project is a simple implementation of change detection for raster imagery using Python. It utilizes **rasterio** to read and write GeoTIFF files, enabling efficient geospatial data processing. The solution computes pixel-wise differences between two input images and generates a binary change map 🗺️. 
+
+<div align="center">
+  <img src="./readme/sample.png"></img>
+</div>
 
 ## 🎯 Purpose
 Mapsheet refreshes are usually excessively tedious, change detection helps to narrow down the scope that cartographers need to review instead of manually performing analysis. This solution also has general uses in IMINT analysis/ HADR Damage Assessment.
@@ -13,6 +17,21 @@ Mapsheet refreshes are usually excessively tedious, change detection helps to na
 
 ### ❓ What is Rasterio?
 [Rasterio](https://rasterio.readthedocs.io/) is a Python library that enables reading, writing, and processing geospatial raster datasets. It provides an easy-to-use API to handle raster formats like GeoTIFF while maintaining geospatial metadata and ensuring efficient I/O operations.
+
+## 📄 Methodology
+
+### **1️⃣ Read and Process Raster Images**
+The code extracts only **the first band** (assumes single-band grayscale images). 
+
+### **2️⃣ Image Alignment**
+- If the two images have different dimensions, it **resizes the second image** to match the first one.  
+- This ensures pixel-wise comparison.  
+
+### **3️⃣ Compute Change Detection**
+- The script calculates the **absolute difference** between the two images to highlight changed areas while ignoring sign differences.
+- **Normalization**: Scales `diff_image` values between `0-255` for consistency.  
+- **Logarithmic Transformation**: log(1 + diff_image)
+- **Thresholding**:  Computes a **dynamic threshold** (`threshold = 0.5 * max(diff)`) and sets pixels **above threshold to 255 (white) and below to 0 (black)**.  
 
 ## 🚀 How to Run It
 
