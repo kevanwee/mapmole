@@ -1,81 +1,68 @@
-import rasterio
-import numpy as np
+"""
+MapMole CLI — command-line interface for raster change detection.
+
+Usage:
+    python mapmole.py
+"""
+
+import argparse
+import sys
+
 import matplotlib.pyplot as plt
-from rasterio.plot import show
 
-def get_valid_file_path(prompt):
+from core import run_change_detection, save_raster
+
+
+def _prompt_path(label):
+    """Prompt for a .tif file path with basic validation."""
     while True:
-        file_path = input(prompt)
-        if file_path.endswith(".tif"):
-            return file_path
-        else:
-            print("Invalid file format. Please enter a .tif file.")
+        path = input(f"Enter path to the {label} .tif image: ").strip()
+        if path.lower().endswith(".tif"):
+            return path
+        print("Invalid file format. Please enter a .tif file.")
 
-def read_raster(file_path):
-    with rasterio.open(file_path) as src:
-        data = src.read(1)
-        profile = src.profile
-    return data, profile
-
-def resample_raster(data, reference_shape):
-    return np.resize(data, reference_shape)
-
-def calculate_difference(image1, image2):
-    return np.abs(image1 - image2)
-
-def enhance_contrast(diff_image, threshold_factor=0.75):
-    diff_image = (diff_image - np.min(diff_image)) / (np.max(diff_image) - np.min(diff_image)) * 255
-    diff_image = diff_image.astype(np.uint8)
-
-    diff_image = np.log1p(diff_image)
-    diff_image = (diff_image / np.max(diff_image)) * 255
-    diff_image = diff_image.astype(np.uint8)
-
-    threshold = threshold_factor * np.max(diff_image)  # Set a dynamic threshold
-    return np.where(diff_image > threshold, 255, 0).astype(np.uint8)
-
-def save_raster(output_path, data, profile):
-    profile.update(dtype=rasterio.uint8, count=1)
-    with rasterio.open(output_path, 'w', **profile) as dst:
-        dst.write(data, 1)
 
 def main():
-    image1_path = get_valid_file_path("Enter path to the first .tif image: ")
-    image2_path = get_valid_file_path("Enter path to the second .tif image: ")
-    output_path = get_valid_file_path("Enter path for the output .tif file: ")
+    parser = argparse.ArgumentParser(
+        description="MapMole — detect changes between two GeoTIFF raster images.",
+    )
+    parser.add_argument("--image1", help="Path to the first .tif image")
+    parser.add_argument("--image2", help="Path to the second .tif image")
+    parser.add_argument("--output", help="Path for the output .tif file")
+    parser.add_argument(
+        "--threshold",
+        type=float,
+        default=0.75,
+        help="Threshold factor for change sensitivity (0.0–1.0, default 0.75)",
+    )
+    args = parser.parse_args()
 
-    image1, profile1 = read_raster(image1_path)
-    image2, profile2 = read_raster(image2_path)
+    image1_path = args.image1 or _prompt_path("first")
+    image2_path = args.image2 or _prompt_path("second")
+    output_path = args.output or _prompt_path("output")
 
-    if image1.shape != image2.shape:
-        print("Resampling second image to match the first...")
-        image2 = resample_raster(image2, image1.shape)
-    
-    diff_image = calculate_difference(image1, image2)
-    change_map = enhance_contrast(diff_image)
-    save_raster(output_path, change_map, profile1)
+    print("Running change detection …")
+    try:
+        image1, image2, change_map, profile = run_change_detection(
+            image1_path, image2_path, args.threshold
+        )
+    except Exception as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        sys.exit(1)
 
+    save_raster(output_path, change_map, profile)
     print(f"Change map saved to {output_path}")
-    
-    plt.figure(figsize=(10, 5))
 
-    plt.subplot(1, 3, 1)
-    plt.title("Image 1")
-    plt.imshow(image1)
-    plt.axis("off")
-
-    plt.subplot(1, 3, 2)
-    plt.title("Image 2")
-    plt.imshow(image2)
-    plt.axis("off")
-
-    plt.subplot(1, 3, 3)
-    plt.title("Change Map")
-    plt.imshow(change_map)
-    plt.axis("off")
-
+    fig, axes = plt.subplots(1, 3, figsize=(14, 5))
+    for ax, img, title in zip(
+        axes, [image1, image2, change_map], ["Image 1", "Image 2", "Change Map"]
+    ):
+        ax.imshow(img, cmap="gray")
+        ax.set_title(title)
+        ax.axis("off")
     plt.tight_layout()
     plt.show()
+
 
 if __name__ == "__main__":
     main()
