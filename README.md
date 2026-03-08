@@ -1,71 +1,135 @@
-# 🌍 Change Detection in Raster Images 
-(work in progress)
-<div align="center">
-  <img src="./readme/sample.jpg"></img>
-</div>
+# 🐀 MapMole
 
-## 📝 Overview
-This project is a simple implementation of change detection for raster imagery using Python. It utilizes **rasterio** to read and write GeoTIFF files, enabling efficient geospatial data processing. The solution computes pixel-wise differences between two input images and generates a binary change map 🗺️. 
-
-## 🎯 Purpose
-Change detection is a critical technique used across various domains to identify and analyze differences in spatial, structural, or environmental data over time with uses in:
-- Humanitarian Assistance and Disaster Relief (HADR): assessing damage after natural disasters by comparing pre- and post-event satellite imagery;
-- Imagery Intelligence (IMINT) analysis: monitor activity patterns, and infrastructure developments; and
-- Cartography: detect landscape changes such as new urban developments, deforestation, or shifting coastlines to assist in mapsheet refreshes.
+**Raster change detection made easy** — upload two GeoTIFF satellite images and instantly see what changed.
 
 <div align="center">
-  <img src="./readme/theory.png"></img>
+  <img src="./readme/sample.jpg" alt="MapMole sample output" />
 </div>
 
-### ❓ What is Rasterio?
-[Rasterio](https://rasterio.readthedocs.io/) is a Python library that enables reading, writing, and processing geospatial raster datasets. It provides an easy-to-use API to handle raster formats like GeoTIFF while maintaining geospatial metadata and ensuring efficient I/O operations.
+## Overview
 
-## 📄 Methodology
+MapMole compares two raster images (GeoTIFF) and produces a binary change map highlighting areas of difference. It ships with both a **Streamlit web UI** and a **command-line interface**, so you can use whichever fits your workflow.
 
-### **1️⃣ Read and Process Raster Images**
-The code extracts only **the first band** (assumes single-band grayscale images). 
-(Note: it is recommended to use images that have the same projection system)
+### Use Cases
 
-### **2️⃣ Image Alignment**
-- If the two images have different dimensions, it **resizes the second image** to match the first one.  
-- This ensures pixel-wise comparison.  
+| Domain | Example |
+|--------|---------|
+| **HADR** | Assess damage after natural disasters by comparing pre- and post-event satellite imagery |
+| **IMINT** | Monitor activity patterns, infrastructure, and developments over time |
+| **Cartography** | Detect deforestation, urban expansion, or shifting coastlines for mapsheet refreshes |
 
-### **3️⃣ Compute Change Detection**
-- The script calculates the **absolute difference** between the two images to highlight changed areas while ignoring sign differences.
-- **Normalization**: Scales `diff_image` values between `0-255` for consistency.  
-- **Logarithmic Transformation**: log(1 + diff_image)
-- **Thresholding**:  Computes a **dynamic threshold** (`threshold = 0.5 * max(diff)`) and sets pixels **above threshold to 255 (white) and below to 0 (black)**.  
+<div align="center">
+  <img src="./readme/theory.png" alt="Change detection theory" />
+</div>
 
-## 🚀 How to Run It
+## How It Works
 
-### 🛠️ Install Required Libraries
-Ensure you have Python installed along with the following libraries:
+1. **Read** — extracts the first band of each GeoTIFF (single-band grayscale assumed).
+2. **Align** — if dimensions differ, the second image is resampled to match the first using bilinear interpolation via [Rasterio](https://rasterio.readthedocs.io/).
+3. **Diff** — computes the absolute pixel-wise difference.
+4. **Enhance** — normalises to 0–255, applies a log stretch (`log(1 + x)`), then thresholds with a configurable sensitivity factor to produce a binary mask.
 
-- **rasterio** 🗺️
-- **numpy** 🔢
-- **matplotlib** 📊
+> **Tip:** Use images in the same projection system for best results. Colour-correcting the imagery beforehand also helps. Results may vary with cloud cover or georectification errors.
 
-Install them:
+## Quick Start
+
+### Prerequisites
+
+- Python 3.9+
+
+### Install
+
+```bash
+pip install -r requirements.txt
 ```
-pip install rasterio numpy matplotlib
+
+### Web UI (recommended)
+
+```bash
+streamlit run app.py
 ```
 
-### ▶️ Run the python script
-Execute it in your terminal or command prompt
+This opens an interactive dashboard where you can:
+- Upload two `.tif` images
+- Adjust the change-detection threshold with a slider
+- Choose a colour map
+- View side-by-side results with statistics
+- Download the output change map
+
+### CLI
+
+```bash
+# Interactive prompts
+python mapmole.py
+
+# Or pass arguments directly
+python mapmole.py --image1 before.tif --image2 after.tif --output changes.tif --threshold 0.7
 ```
+
+## Project Structure
+
+```
+mapmole/
+├── app.py              # Streamlit web UI
+├── core.py             # Shared change-detection engine
+├── mapmole.py          # Command-line interface
+├── requirements.txt    # Python dependencies
+├── .gitignore
+├── LICENSE             # MIT
+└── readme/             # Images for this README
+```
+
+---
+
+## CLI Reference
+
+The CLI supports both **interactive mode** (guided prompts) and **argument mode** for scripting and automation.
+
+### Interactive Mode
+
+```bash
 python mapmole.py
 ```
-📂 Input the file paths accordingly
 
-### 📤 Output
+You'll be prompted to enter:
+1. Path to the first `.tif` image
+2. Path to the second `.tif` image
+3. Path for the output `.tif` file
 
-The script will generate an output GeoTIFF file (e.g., output_change_map.tif) containing the binary change map.
-It will also display visualizations of the input images and the resulting change map.
-(In the event that too many or too few changes are being detected in the output map, adjust the threshold parameter in the script.)
+A matplotlib window will display the before, after, and change map side by side.
 
-💡 Pro Tip: Try this solution for deforestation monitoring 🌳, urban expansion tracking 🏙️, or disaster impact assessment 🌊
+### Argument Mode
 
-💡 Pro Tip 2: Color correcting the imagery would generally be helpful. Note that results may vary based on the cloud cover and errors in georectification.
+```bash
+python mapmole.py --image1 <path> --image2 <path> --output <path> [--threshold <float>]
+```
 
+| Flag | Required | Default | Description |
+|------|----------|---------|-------------|
+| `--image1` | Yes* | — | Path to the first (before) `.tif` image |
+| `--image2` | Yes* | — | Path to the second (after) `.tif` image |
+| `--output` | Yes* | — | Path for the output change map `.tif` |
+| `--threshold` | No | `0.75` | Sensitivity factor (0.0–1.0). Lower = more changes detected |
 
+*If omitted, the CLI falls back to interactive prompts.
+
+### Examples
+
+```bash
+# Full argument mode — no prompts
+python mapmole.py --image1 before.tif --image2 after.tif --output changes.tif
+
+# High sensitivity (detect subtle changes)
+python mapmole.py --image1 before.tif --image2 after.tif --output changes.tif --threshold 0.5
+
+# Low sensitivity (only major changes)
+python mapmole.py --image1 before.tif --image2 after.tif --output changes.tif --threshold 0.9
+
+# Mixed — supply images via args, get prompted for output path
+python mapmole.py --image1 before.tif --image2 after.tif
+```
+
+## License
+
+[MIT](LICENSE) — made by [kevanwee](https://github.com/kevanwee).
 
