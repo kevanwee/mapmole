@@ -78,33 +78,45 @@ with st.sidebar:
     st.markdown("---")
     st.markdown(
         "**How it works**\n"
-        "1. Upload two `.tif` raster images\n"
+        "1. Use the sample pair, or upload two `.tif` raster images\n"
         "2. Adjust the threshold slider\n"
         "3. Click **Run Change Detection**\n"
         "4. Download the resulting change map"
     )
 
-# ── File uploads ─────────────────────────────────────────────────────────────
-col_up1, col_up2 = st.columns(2)
-with col_up1:
-    file1 = st.file_uploader("📂 Upload Image 1 (.tif)", type=["tif", "tiff"], key="f1")
-with col_up2:
-    file2 = st.file_uploader("📂 Upload Image 2 (.tif)", type=["tif", "tiff"], key="f2")
+# ── Images: the bundled sample pair, or two uploads ──────────────────────────
+SAMPLES = Path(__file__).parent / "samples"
+SAMPLE_PAIR = (SAMPLES / "tuas_2018-01-21_nir.tif", SAMPLES / "tuas_2025-12-05_nir.tif")
+use_sample = st.toggle(
+    "Use the sample pair: Tuas port, Singapore (Sentinel-2 near-infrared, Jan 2018 vs Dec 2025)",
+    value=True,
+    help="Land reclaimed for the new Tuas container port shows up as change. Turn this off to upload your own pair.",
+)
+file1 = file2 = None
+if not use_sample:
+    col_up1, col_up2 = st.columns(2)
+    with col_up1:
+        file1 = st.file_uploader("📂 Upload Image 1 (.tif)", type=["tif", "tiff"], key="f1")
+    with col_up2:
+        file2 = st.file_uploader("📂 Upload Image 2 (.tif)", type=["tif", "tiff"], key="f2")
 
 # ── Run button ───────────────────────────────────────────────────────────────
 run_btn = st.button("🚀 Run Change Detection", type="primary", use_container_width=True)
 
 if run_btn:
-    if file1 is None or file2 is None:
-        st.error("Please upload both images before running.")
-        st.stop()
+    tmp_dir = tempfile.mkdtemp()  # uploads (if any) and the change map for download
+    if use_sample:
+        path1, path2 = SAMPLE_PAIR
+    else:
+        if file1 is None or file2 is None:
+            st.error("Please upload both images before running.")
+            st.stop()
 
-    # Write uploaded files to temp paths so rasterio can open them
-    tmp_dir = tempfile.mkdtemp()
-    path1 = Path(tmp_dir) / "image1.tif"
-    path2 = Path(tmp_dir) / "image2.tif"
-    path1.write_bytes(file1.getvalue())
-    path2.write_bytes(file2.getvalue())
+        # Write uploaded files to temp paths so rasterio can open them
+        path1 = Path(tmp_dir) / "image1.tif"
+        path2 = Path(tmp_dir) / "image2.tif"
+        path1.write_bytes(file1.getvalue())
+        path2.write_bytes(file2.getvalue())
 
     with st.spinner("Detecting changes …"):
         try:

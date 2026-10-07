@@ -31,6 +31,20 @@ MapMole compares two raster images (GeoTIFF) and produces a binary change map hi
 
 > **Tip:** Use images in the same projection system for best results. Colour-correcting the imagery beforehand also helps. Results may vary with cloud cover or georectification errors.
 
+## Sample pair and deployment
+
+The app opens with a sample pair switched on, so it works without uploading anything:
+`samples/tuas_2018-01-21_nir.tif` and `samples/tuas_2025-12-05_nir.tif` are the same 6.6 × 6.6 km
+window over Tuas, Singapore, in Sentinel-2's near-infrared band (10 m). The new Tuas container port's
+reclaimed piers show up as change (about 13% of pixels at the default threshold); two small clouds in
+the 2025 scene add a little noise. Switch the sample off to upload your own pair.
+
+Contains modified Copernicus Sentinel data (2018, 2025), via Element 84's Earth Search catalogue on AWS.
+
+**Deploy on Streamlit Community Cloud (free):** at share.streamlit.io choose **Create app**, pick this
+repository, branch `main` and main file `app.py`, and (under Advanced settings) Python 3.12. It installs
+`requirements.txt`. Then set the repository's website link to the new app URL.
+
 ## Quick Start
 
 ### Prerequisites
