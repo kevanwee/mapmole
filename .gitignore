@@ -25,6 +25,7 @@ desktop.ini
 # Temporary / output
 *.tif
 !readme/*.tif
+!samples/*.tif
 
 # Streamlit
 .streamlit/secrets.toml
