@@ -5,7 +5,6 @@ Run with:
     streamlit run app.py
 """
 
-import io
 import tempfile
 from pathlib import Path
 
@@ -128,8 +127,9 @@ if run_btn:
             st.stop()
 
     # ── Metrics row ──────────────────────────────────────────────────────
-    total_pixels = change_map.size
-    changed_pixels = int(np.count_nonzero(change_map))
+    st.caption("Statistics cover valid overlapping pixels only. Blank pixels were not compared. Spectral differences require interpretation.")
+    total_pixels = int(change_map.count())
+    changed_pixels = int(np.count_nonzero(change_map.filled(0)))
     pct_changed = changed_pixels / total_pixels * 100 if total_pixels else 0
 
     m1, m2, m3, m4 = st.columns(4)
@@ -140,7 +140,7 @@ if run_btn:
         )
     with m2:
         st.markdown(
-            f'<div class="metric-card"><h3>Total Pixels</h3><p>{total_pixels:,}</p></div>',
+            f'<div class="metric-card"><h3>Compared Pixels</h3><p>{total_pixels:,}</p></div>',
             unsafe_allow_html=True,
         )
     with m3:

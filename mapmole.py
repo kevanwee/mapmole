@@ -35,6 +35,7 @@ def main():
         default=0.75,
         help="Threshold factor for change sensitivity (0.0–1.0, default 0.75)",
     )
+    parser.add_argument("--no-show", action="store_true", help="Export without opening a plot")
     args = parser.parse_args()
 
     image1_path = args.image1 or _prompt_path("first")
@@ -52,6 +53,10 @@ def main():
 
     save_raster(output_path, change_map, profile)
     print(f"Change map saved to {output_path}")
+
+    print(f"Compared {change_map.count():,} of {change_map.size:,} pixels on the first image grid.")
+    if args.no_show:
+        return
 
     fig, axes = plt.subplots(1, 3, figsize=(14, 5))
     for ax, img, title in zip(

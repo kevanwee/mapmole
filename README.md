@@ -24,19 +24,24 @@ MapMole compares two raster images (GeoTIFF) and produces a binary change map hi
 
 ## How It Works
 
-1. **Read** — extracts the first band of each GeoTIFF (single-band grayscale assumed).
-2. **Align** — if dimensions differ, the second image is resampled to match the first using bilinear interpolation via [Rasterio](https://rasterio.readthedocs.io/).
-3. **Diff** — computes the absolute pixel-wise difference.
-4. **Enhance** — normalises to 0–255, applies a log stretch (`log(1 + x)`), then thresholds with a configurable sensitivity factor to produce a binary mask.
+1. **Read** - extract the first band and its CRS, transform and validity mask. Both images must have a CRS.
+2. **Align** - reproject the second image onto the first image's geographic grid with bilinear interpolation, even when their dimensions match.
+3. **Compare** - calculate absolute differences only where both images contain finite, valid data. Disjoint images fail with an actionable error; uncovered pixels are never counted as unchanged.
+4. **Enhance** - scale differences from zero, apply a log stretch, then threshold into a 0/255 map. Relative differences at or below `1e-12` are treated as floating-point roundoff. Uniform positive differences remain detectable.
+5. **Export** - retain the first image's CRS and transform and embed the validity mask inside the GeoTIFF. Zero means unchanged; masked pixels mean not compared.
 
-> **Tip:** Use images in the same projection system for best results. Colour-correcting the imagery beforehand also helps. Results may vary with cloud cover or georectification errors.
+The percentage shown in the UI uses **valid overlapping pixels** as its denominator.
+This is spectral change detection, not land-use classification: use comparable bands
+and radiometric units. Clouds, seasonal changes and registration errors can all
+produce differences. Bilinear interpolation is intended for continuous imagery,
+not categorical land-cover rasters.
 
 ## Sample pair and deployment
 
 The app opens with a sample pair switched on, so it works without uploading anything:
 `samples/tuas_2018-01-21_nir.tif` and `samples/tuas_2025-12-05_nir.tif` are the same 6.6 × 6.6 km
 window over Tuas, Singapore, in Sentinel-2's near-infrared band (10 m). The new Tuas container port's
-reclaimed piers show up as change (about 13% of pixels at the default threshold); two small clouds in
+reclaimed piers show up as change (a visible portion of the comparison area); two small clouds in
 the 2025 scene add a little noise. Switch the sample off to upload your own pair.
 
 Contains modified Copernicus Sentinel data (2018, 2025), via Element 84's Earth Search catalogue on AWS.
@@ -123,6 +128,7 @@ python mapmole.py --image1 <path> --image2 <path> --output <path> [--threshold <
 | `--image1` | Yes* | — | Path to the first (before) `.tif` image |
 | `--image2` | Yes* | — | Path to the second (after) `.tif` image |
 | `--output` | Yes* | — | Path for the output change map `.tif` |
+| `--no-show` | No | off | Export without opening a plot |
 | `--threshold` | No | `0.75` | Sensitivity factor (0.0–1.0). Lower = more changes detected |
 
 *If omitted, the CLI falls back to interactive prompts.
@@ -147,3 +153,14 @@ python mapmole.py --image1 before.tif --image2 after.tif
 
 [MIT](LICENSE) — made by [kevanwee](https://github.com/kevanwee).
 
+
+## Validation
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest -q
+python mapmole.py --image1 samples/tuas_2018-01-21_nir.tif --image2 samples/tuas_2025-12-05_nir.tif --output changes.tif --no-show
+```
+
+CI covers geographic alignment, reprojection, missing CRS, disjoint coverage,
+nodata interpolation, internal export masks, constant differences and the bundled example.
